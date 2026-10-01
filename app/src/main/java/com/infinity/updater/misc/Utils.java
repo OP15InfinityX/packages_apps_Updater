@@ -78,7 +78,9 @@ public class Utils {
     }
 
     public static File getCachedUpdateList(Context context) {
-        return new File(context.getCacheDir(), "updates.json");
+        // Do not reuse another Android version's or build variant's catalog.
+        return new File(context.getCacheDir(),
+                "updates-" + getAndroidVersion() + "-" + getBuildVariant() + ".json");
     }
 
     // This should really return an UpdateBaseInfo object, but currently this only
@@ -138,12 +140,25 @@ public class Utils {
         return updates;
     }
 
+    private static String getAndroidVersion() {
+        return SystemProperties.get(Constants.PROP_ANDROID_VERSION, "17");
+    }
+
+    private static String getBuildVariant() {
+        // Older builds used the GApps catalog unconditionally. New builds
+        // always set this property, including Vanilla with user-installed GApps.
+        return SystemProperties.getBoolean(Constants.PROP_WITH_GAPPS, true)
+                ? "gapps" : "vanilla";
+    }
+
     public static String getServerURL(Context context) {
         String device = SystemProperties.get(Constants.PROP_DEVICE);
 
         String serverUrl = context.getString(R.string.updater_server_url);
 
-        return serverUrl.replace("{device}", device);
+        return serverUrl.replace("{device}", device)
+                .replace("{android_version}", getAndroidVersion())
+                .replace("{variant}", getBuildVariant());
     }
 
     public static String getUpgradeBlockedURL(Context context) {
@@ -153,7 +168,8 @@ public class Utils {
 
     public static String getChangelogURL(Context context) {
         String device = SystemProperties.get(Constants.PROP_DEVICE);
-        return context.getString(R.string.menu_changelog_url, device);
+        return context.getString(R.string.menu_changelog_url, device)
+                .replace("{android_version}", getAndroidVersion());
     }
 
     public static void triggerUpdate(Context context, String downloadId) {
