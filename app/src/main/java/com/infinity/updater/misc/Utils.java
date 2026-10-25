@@ -168,7 +168,10 @@ public class Utils {
 
     public static String getChangelogURL(Context context) {
         String device = SystemProperties.get(Constants.PROP_DEVICE);
-        return context.getString(R.string.menu_changelog_url, device)
+        // Infiniti publishes a separate Vanilla changelog; other devices keep theirs.
+        String changelogDevice = "infiniti".equals(device) && "vanilla".equals(getBuildVariant())
+                ? device + "-vanilla" : device;
+        return context.getString(R.string.menu_changelog_url, changelogDevice)
                 .replace("{android_version}", getAndroidVersion());
     }
 
